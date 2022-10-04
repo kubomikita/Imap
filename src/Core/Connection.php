@@ -89,13 +89,16 @@ class Connection
     public function connect()
     {
         try {
-            $this->stream = imap_open(
+            $this->stream = @imap_open(
                 '{'.$this->server.':'.$this->port.$this->flag.'}'.$this->folder,
                 $this->email,
                 $this->password
             );
+			if(($last_error = imap_last_error()) !== false && $this->stream === false){
+				throw new \ErrorException($last_error);
+			}
         } catch (\Exception $e) {
-            throw new AuthenticationFailedException('Error! Connecting to Imap Email.');
+            throw new AuthenticationFailedException($e->getMessage());
         }
 
         return $this;
@@ -105,8 +108,11 @@ class Connection
     {
         try {
             imap_reopen($this->stream, '{'.$this->server.':'.$this->port.$this->flag.'}'.$folder);
+	        if(($last_error = imap_last_error()) !== false){
+		        throw new \ErrorException($last_error);
+	        }
         } catch (\Exception $e) {
-            throw new AuthenticationFailedException('Error! Connecting to Imap Email.');
+            throw new AuthenticationFailedException($e->getMessage());
         }
     }
 
